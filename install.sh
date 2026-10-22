@@ -345,9 +345,13 @@ cmd_run() {
   cmd_configure
   log "starting gitea on port $(sed -nE 's/^HTTP_PORT *= *//p' "$GITEA_CONFIG" | head -n1)"
   cd "$GITEA_WORK_DIR"
+  # tini reaps git's orphaned children. It must share gitea's uid: hosts like Render drop
+  # CAP_KILL, so a root init cannot forward signals to it.
+  local init=()
+  command -v tini >/dev/null && init=(tini --)
   exec setpriv --reuid="$GITEA_USER" --regid="$GITEA_USER" --init-groups \
     env HOME="$GITEA_HOME" USER="$GITEA_USER" GITEA_WORK_DIR="$GITEA_WORK_DIR" \
-    "$GITEA_BIN" web --config "$GITEA_CONFIG"
+    "${init[@]}" "$GITEA_BIN" web --config "$GITEA_CONFIG"
 }
 
 cmd_service() {

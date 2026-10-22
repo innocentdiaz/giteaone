@@ -15,5 +15,4 @@ RUN apt-get update -qq \
   && rm -rf /var/lib/apt/lists/*
 ENV GITEA_WORK_DIR=/var/lib/gitea
 EXPOSE 3000
-ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["bash", "/usr/local/lib/gitea/install.sh", "run"]
