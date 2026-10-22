@@ -182,6 +182,16 @@ cmd_build() {
   cd "$GITEA_SRC"
   # A manifest copied from another machine makes make skip the frontend build.
   rm -rf public/assets/.vite
+  # Render's build context has no .git, so make cannot `git describe` a version.
+  if ! git rev-parse --git-dir &>/dev/null && [[ ! -s VERSION && -z ${GITEA_VERSION:-} ]]; then
+    local branch=${RENDER_GIT_BRANCH:-}
+    export GITHUB_REF_NAME=${branch:-HEAD}
+    branch=${branch#release/v}
+    local commit=${RENDER_GIT_COMMIT:-}
+    export GITEA_VERSION="${branch:-dev}+${commit:0:10}"
+    [[ -n $commit ]] || GITEA_VERSION+=$(date -u +%Y%m%d%H%M%S)
+    log "no git metadata; version $GITEA_VERSION"
+  fi
   log "make build TAGS=\"$GITEA_TAGS\""
   make build TAGS="$GITEA_TAGS"
   install -m 0755 gitea "$GITEA_BIN"

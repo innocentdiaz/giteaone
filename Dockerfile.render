@@ -1,5 +1,7 @@
 # Debian 12 image for Render (or any container host): install.sh does all the work.
 FROM debian:bookworm-slim AS build
+ARG RENDER_GIT_BRANCH
+ARG RENDER_GIT_COMMIT
 WORKDIR /src
 COPY . .
 RUN bash install.sh build
