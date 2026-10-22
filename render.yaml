@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: gitea
+    runtime: docker
+    dockerfilePath: ./Dockerfile.render
+    region: oregon
+    plan: starter
+    healthCheckPath: /api/healthz
+    disk:
+      name: gitea-data
+      mountPath: /var/lib/gitea
+      sizeGB: 10
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gitea-db
+          property: connectionString
+      - key: GITEA_ADMIN_USER
+        sync: false
+      - key: GITEA_ADMIN_EMAIL
+        sync: false
+      - key: GITEA_ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: gitea-db
+    region: oregon
+    plan: basic-256mb
+    databaseName: gitea
+    user: gitea
