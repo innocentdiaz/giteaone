@@ -2,7 +2,7 @@ services:
   - type: web
     name: gitea
     runtime: docker
-    dockerfilePath: ./Dockerfile.render
+    dockerfilePath: ./Dockerfile
     region: oregon
     plan: starter
     healthCheckPath: /api/healthz
