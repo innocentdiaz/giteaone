@@ -28,7 +28,8 @@
 #   RENDER_EXTERNAL_URL   public URL (Render sets this); becomes ROOT_URL
 #   GITEA__section__KEY   any app.ini setting, applied on every configure
 #   GITEA_REPO, GITEA_REF source to clone when not run from a checkout (default: upstream, latest release)
-#   GITEA_WORK_DIR        data root (default /var/lib/gitea)
+#   GITEA_WORK_DIR        data root (default /var/lib/gitea); on Render it must be a disk mount
+#   GITEA_ALLOW_EPHEMERAL start on Render without a disk (all data is lost on each deploy)
 #   GITEA_TAGS            build tags (default "bindata timetzdata sqlite sqlite_unlock_notify")
 #   NODE_MAJOR            Node.js line to install when the present one is too old (default 24)
 set -Eeuo pipefail
@@ -336,6 +337,11 @@ cmd_configure() {
 }
 
 cmd_run() {
+  # Render wipes the container filesystem on every deploy; without a disk the database
+  # outlives the repositories and every repo becomes unreadable.
+  if [[ -n ${RENDER:-} && -z ${GITEA_ALLOW_EPHEMERAL:-} ]] && ! mountpoint -q "$GITEA_WORK_DIR"; then
+    die "$GITEA_WORK_DIR is not a persistent disk. Add a Render disk mounted at $GITEA_WORK_DIR (or set GITEA_ALLOW_EPHEMERAL=1 to accept losing all data on each deploy)"
+  fi
   cmd_configure
   log "starting gitea on port $(sed -nE 's/^HTTP_PORT *= *//p' "$GITEA_CONFIG" | head -n1)"
   cd "$GITEA_WORK_DIR"
